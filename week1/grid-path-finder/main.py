@@ -144,6 +144,7 @@ class MainApp(tk.Frame):
             prev = path[current]
             self.plot_line_segment(prev[0], prev[1], current[0], current[1], color=cf.FINAL_C)
             current = prev
+            self.pause()
 
 # create and start GUI
 root = tk.Tk()

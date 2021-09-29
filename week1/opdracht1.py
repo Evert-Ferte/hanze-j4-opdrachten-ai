@@ -1,102 +1,74 @@
-class State:
+class Node:
     def __init__(self, left: [], right: []):
-        self.left = left.copy()
-        self.right = right.copy()
+        self.left = left
+        self.right = right
 
-    left = []
-    right = []
-
-
-def turn(left, right):
-    # Check for the winning condition
-    if len(left) == 0 and len(right) == 4:
-        return left, right
-
-    print('Start of turn. State:\t\t', left, right)
-
-    # Put both river side states in a list, relative to the farmer. A will always contain the farm, B not.
-    farmerLeft = left.__contains__('f')
-    a = left if farmerLeft else right  # A is where the farmer is
-    b = right if farmerLeft else left  # B is where the farmer is NOT
-
-    # Start by moving the farmer first
-    a.remove('f')
-    b.append('f')
-
-    # We then sort characters (necessary for tracking the history)
-    a.sort()
-    b.sort()
-
-    # Loop through the river side to see what item the farmer can take with him
-    validStateFound = False
-    for e in a:
-        # Move E from A to B
-        newA = a.copy()
-        newA.remove(e)
-        newB = b.copy() + [e]
-        newA.sort()
-        newB.sort()
-
-        # Check if the move we just made is valid
-        if valid(State(newA if farmerLeft else newB, newB if farmerLeft else newA)):
-            # Set the new state
-            left = newA if farmerLeft else newB
-            right = newB if farmerLeft else newA
-            validStateFound = True
-            break
-
-    # If no valid state was found, backtrack
-    if not validStateFound and not valid(State(a if farmerLeft else b, b if farmerLeft else a)):
-        del stack[-1]
-
-        print('      Backtracking...')
-
-        left = stack[len(stack) - 1].left
-        right = stack[len(stack) - 1].right
-    # Else, continue like normal
-    else:
-        # Save the new state, and add to the stack
-        visited.append(State(left, right))
-        stack.append(State(left, right))
-
-    print('  End of turn. State:\t\t', left, right, '\n')
-
-    left, right = turn(left, right)
-    return left, right
+    def to_string(self):
+        return str(self.left) + str(self.right)
 
 
-def valid(state: State):
-    # Check if the left and right side contain the cabbage and goat or the wolf and goat (they can only go together if the farmer is there)
-    if not state.left.__contains__('f'):
-        return (state.left.__contains__('c') and state.left.__contains__('g')) or (state.left.__contains__('w') and state.left.__contains__('g'))
+def dfs(node, visited):
+    print('new dfs:', node.to_string())
+    if goal_reached(node):
+        return True
 
-    if not state.right.__contains__('f'):
-        return (state.right.__contains__('c') and state.right.__contains__('g')) or (state.right.__contains__('w') and state.right.__contains__('g'))
+    visited.add(node)
+    for neighbour in get_neighbours(node):
+        if is_valid(neighbour):
+            # if neighbour not in visited:
+            if not contains(neighbour, visited):
+                # print('new unvisited node found: {} {}'.format(neighbour.left, neighbour.right))
+                if dfs(neighbour, visited):
+                    return True
 
-    # The state is invalid if we have already visited this state
-    for e in visited:
-        if e.left == state.left and e.right == state.right:
-            return False
+    return False
 
+
+def goal_reached(node: Node):
+    return len(node.left) is 0 and len(node.right) is 4
+
+
+def contains(item, set):
+    for e in set:
+        if e.left == item.left and e.right == item.right:
+            return True
+
+
+def is_valid(node: Node):
+    if not node.left.__contains__('f'):
+        return not ((node.left.__contains__('c') or node.left.__contains__('w')) and node.left.__contains__('g'))
+    if not node.right.__contains__('f'):
+        return not ((node.right.__contains__('c') or node.right.__contains__('w')) and node.right.__contains__('g'))
     return True
 
 
-left, right = ['c', 'f', 'g', 'w'], []
-visited = [State(left, right), ]
-stack = [State(left, right)]
+def get_neighbours(node: Node):
+    n = []
+    farmerLeft = 'f' in node.left
+    a = node.left if farmerLeft else node.right
+    b = node.right if farmerLeft else node.left
 
-# Entry point
-left, right = turn(left, right)
+    def swap_chars(char: str, list1: [], list2: [], n: []):
+        if char in list1:
+            r1 = [e for e in list1 if (e is not char) and (e is not 'f')]
+            r2 = list2 + [char, 'f']
+            r1.sort()
+            r2.sort()
+            n.append(Node(r1 if farmerLeft else r2, r2 if farmerLeft else r1))
 
-print('Finished game in {turns} turns!\nGame state: {left} {right}'.format(turns=len(stack) - 1, left=left, right=right))
+    # can farmer move without trouble?
+    swap_chars('c', a, b, n)
+    swap_chars('g', a, b, n)
+    swap_chars('w', a, b, n)
+
+    r1 = [e for e in a if e is not 'f']
+    r2 = b + ['f']
+    r1.sort()
+    r2.sort()
+    n.append(Node(r1 if farmerLeft else r2, r2 if farmerLeft else r1))
+
+    return n
 
 
-# # Helper functions
-# def print_stack():
-#     p = [str(e.left) + str(e.right) for e in stack]
-#     print('\tstack', p)
-#
-#
-# def log_history():
-#     for e in visited:
-#         print(e.left, e.right)
+dfs(Node(['c', 'f', 'g', 'w'], []), set())
+# print('gaat tot nu toe goed. bij de laatste stap (waar hij in de output blijft hangen) moet hij weer terug met w, dan alleen terug, en dan terug met g. dan is het klaar')
