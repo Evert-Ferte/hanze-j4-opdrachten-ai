@@ -1,0 +1,8 @@
+Hier zijn de antwoorden op de theoretische vragen te vinden.
+
+Opgave 1
+a)
+b) Bij NN doet hij er met 500 steden gemiddeld, over 10 runs, 0.076 seconden, met een gemiddelde route lengte van 20709.53
+c) Is het noodzakleijk om te controleren of de nieuwe route korter is dan de oude? (volgensmij niet want in de colleges werd benoemd dat als een route niet meer kruist dat hij dan altijd korter is. Als dit zo is, leg dan ook uit hoe dit kan!
+d)
+e)
