@@ -45,14 +45,13 @@ def nearest_neighbour_2opt(cities):
     def two_opt_swap(r, i, k):
         return r[:i] + list(reversed(r[i:k])) + r[k:]
 
-    bestPathLength = tour_length(route)
     improved = True
     while improved:
-        # numberOfNodesEligibleForSwap = len(route)
+        bestPathLength = tour_length(route)
         for i in range(len(route) - 1):
             for k in range(i+1, len(route)):
                 newRoute = two_opt_swap(route, i, k)
-                newPathLength = tour_length(route)
+                newPathLength = tour_length(newRoute)
 
                 if newPathLength < bestPathLength:
                     print('new shorter path found, changed from length {} to {}'.format(bestPathLength, newPathLength))
@@ -98,5 +97,18 @@ def plot_tsp(algorithm, cities):
 
 # give a demo with 10 cities using brute force
 # plot_tsp(try_all_tours, make_cities(10))
-plot_tsp(nearest_neighbour, make_cities(100, seed=22))
-plot_tsp(nearest_neighbour_2opt, make_cities(100, seed=22))
+# plot_tsp(nearest_neighbour, make_cities(100, seed=22))
+# plot_tsp(nearest_neighbour_2opt, make_cities(100, seed=22))
+
+
+tour = ['A', 'B', 'C', 'D']
+n = len(tour)
+for i in range(n - 1):
+    for k in range(i + 1, n):
+        print(tour[:i] + list(reversed(tour[i:k])) + tour[k:])
+
+# wat hier staat is 1/2 n^2
+# n = 4
+# for i in range(n):
+#     for k in range(i+1, n):
+#         print(i, k)
