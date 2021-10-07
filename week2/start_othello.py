@@ -31,6 +31,8 @@ This representation has two useful properties:
 """
 
 # The black and white pieces represent the two players.
+import random
+
 EMPTY, BLACK, WHITE, OUTER = '.', '@', 'o', '?'
 PIECES = (EMPTY, BLACK, WHITE, OUTER)
 PLAYERS = {BLACK: 'Black', WHITE: 'White'}
@@ -127,6 +129,20 @@ def make_flips(move, player, board, direction):
         board[square] = player
         square += direction
 
+def get_flip_count(move, player, board):
+    flipCount = 0
+    for d in DIRECTIONS:
+        bracket = find_bracket(move, player, board, d)
+        if not bracket:
+            continue
+        # found a bracket in this direction
+        square = move + d
+        while square != bracket:
+            # board[square] = player
+            flipCount += 1
+            square += d
+    return flipCount
+
 # Monitoring players
 
 # define an exception
@@ -153,17 +169,145 @@ def any_legal_move(player, board):
 # - Apply it to the board.
 # - Switch players. If the game is over, get the final score.
 
-def play(black_strategy, white_strategy):
+def play(black_strat, white_strat):
     # play a game of Othello and return the final board and score
+    board = initial_board()
+    curPlayer = BLACK if random.randint(0, 1) is 0 else WHITE
+    curPlayer = WHITE  # TODO TEMP
+
+    while curPlayer is not None:
+        curPlayer = next_player(board, curPlayer)
+        if curPlayer is not None:
+            print(PLAYERS[curPlayer], 'turn')
+        print(print_board(board))
+
+        # Only continue if the next player is NOT None, meaning the next player CAN make a legal moves
+        if curPlayer is not None:
+            move = get_move(black_strat if curPlayer == BLACK else white_strat, curPlayer, board)
+            make_move(move, curPlayer, board)
+            print(PLAYERS[curPlayer], 'now has', score(curPlayer, board), 'points')
+
+    scoreWhite = score(WHITE, board)
+    scoreBlack = score(BLACK, board)
+    victoryText = '{} has won!'.format(PLAYERS[BLACK] if scoreBlack > scoreWhite else PLAYERS[WHITE]) if scoreBlack is not scoreWhite else 'Game ended in a tie!'
+    print('Game over!\n Final score: Black {}, White {}\n'.format(scoreBlack, scoreWhite), victoryText)
 
 def next_player(board, prev_player):
     # which player should move next?  Returns None if no legal moves exist
+    nextPlayer = opponent(prev_player)
+    return nextPlayer if any_legal_move(nextPlayer, board) else None
 
 def get_move(strategy, player, board):
     # call strategy(player, board) to get a move
+    return strategy(player, board)
 
 def score(player, board):
+    return len([sq for sq in board if sq == player])
     # compute player's score (number of player's pieces minus opponent's)
+    # pass
 
 # Play strategies
+def random_choice_strategy(player, board):
+    return random.choice(legal_moves(player, board))
 
+def minimax_strategy(player, board):
+    MIN, MAX = 0, 1
+
+    def minimax(move, depth, minmax, player, new_board):
+        if depth == 0 or not any_legal_move(player, new_board):
+            print('\t' * (2 - depth), '({}) either depth == o ({}) or no legal moves ({})'.format(depth, depth == 0, not any_legal_move(player, new_board)))
+            print('\t' * (2 - depth), '({}) flip count: {}'.format(depth, get_flip_count(move, player, new_board)))
+            return get_flip_count(move, player, new_board), move
+
+        new_board = make_move(mov, player, new_board)
+
+        if minmax == MAX:
+            bestMove = (0, 0)  # (# of squares flipped by move, move)
+            print('\t' * (2 - depth), '({}) (MAX) legal moves from {}:'.format(depth, move), legal_moves(player, new_board))
+            for nextMove in legal_moves(player, new_board):
+                updated_board = make_move(nextMove, player, new_board.copy())
+                mm = minimax(nextMove, depth - 1, MIN, opponent(player), updated_board)
+                print('\t' * (2 - depth), '({}) (MAX) compare {} to {}: {}'.format(depth, bestMove, mm, max(bestMove, mm)))
+                bestMove = max(bestMove, mm)
+            return bestMove
+        else:
+            bestMove = (0, 0)  # (# of squares flipped by move, move)
+            print('\t' * (2 - depth), '({}) (MIN) legal moves from {}:'.format(depth, move), legal_moves(player, new_board))
+            for nextMove in legal_moves(player, new_board):
+                updated_board = make_move(nextMove, player, new_board.copy())
+                mm = minimax(nextMove, depth - 1, MAX, opponent(player), updated_board)
+                print('\t' * (2 - depth), '({}) (MIN) compare {} to {}: {}'.format(depth, bestMove, mm, min(bestMove, mm)))
+                bestMove = min(bestMove, mm)
+            return bestMove
+
+    def minimax_simple(move, depth, minmax, player, new_board):
+        if depth == 0 or not any_legal_move(player, new_board):
+            return get_flip_count(move, player, new_board), move
+
+        if minmax == MAX:
+            bestMove = (0, 0)
+            for nextMove in legal_moves(player, new_board):
+                updated_board = make_move(nextMove, player, new_board.copy())
+                bestMove = max(bestMove, minimax(nextMove, depth - 1, MIN, opponent(player), updated_board))
+            return bestMove
+        else:
+            bestMove = (0, 0)
+            for nextMove in legal_moves(player, new_board):
+                updated_board = make_move(nextMove, player, new_board.copy())
+                bestMove = min(bestMove, minimax(nextMove, depth - 1, MAX, opponent(player), updated_board))
+            return bestMove
+
+    # square = die we willen (nog moeten) plaatsen
+    # player = huidige speler
+    # board  = huidige bord, zonder aanpassingen van square
+    def minimax_pseudo(square, depth, minmax, player, board):
+        if depth == 0 or not any_legal_move(player, board):  # or not any_legal_move():
+            return get_flip_count(square, player, board), square
+        if minmax == MAX:
+            value = 0
+            # do move
+            updated_board = make_move(square, player, board.copy())
+            # check legal moves, after the move above
+            for child in legal_moves(player, updated_board):
+                value = max(value, minimax_pseudo(child, depth-1, MIN, opponent(player), updated_board))
+            return value
+        else:  # player == MIN
+            value = 0
+            # do move
+            updated_board = make_move(square, player, board.copy())
+            # check legal moves, after the move above
+            for child in legal_moves(player, updated_board):
+                value = min(value, minimax_pseudo(child, depth-2, MAX, opponent(player), updated_board))
+            return value
+
+
+    bestMove = (0, 0)  # (# of squares flipped by move, move)
+    minmaxDepth = 1
+    # This for loop is MAX-ing
+    for mov in legal_moves(player, board):
+        # updated_board = make_move(mov, player, board.copy())
+        mm = minimax_pseudo(mov, minmaxDepth - 1, MAX, player, board.copy())
+        # print('get max value from {}[0] and {}[0]'.format(bestMove, mm))
+        bestMove = max(bestMove, mm)
+    print('best move for {} is {}'.format(PLAYERS[player], '{}[1]'.format(bestMove)))
+    return bestMove[1]
+
+    # return minimax(origin, 5, MAX)  # TODO return proper bestMove
+
+    # TODO possible shorter version for the code above! Still need some fixing
+    #  def get_val(f, v, node):
+    #      for child in get_next_moves(node):
+    #          bestMove = f(v, minimax(child, depth - 1, MIN))
+    #      return bestMove
+    #  get_val(min/max, ???, move)
+
+# Start of the program
+play(minimax_strategy, random_choice_strategy)
+
+# board = initial_board()
+# print(get_flip_count(34, BLACK, board))
+# make_move(34, BLACK, board)
+# print(print_board(board))
+
+# Theorie vragen te beantwoorden:
+#  - Waarom een 1 of 2 dimentionale array gebruiken?

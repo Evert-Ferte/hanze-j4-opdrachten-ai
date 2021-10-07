@@ -6,3 +6,8 @@ b) Bij NN doet hij er met 500 steden gemiddeld, over 10 runs, 0.076 seconden, me
 c) Is het noodzakleijk om te controleren of de nieuwe route korter is dan de oude? (volgensmij niet want in de colleges werd benoemd dat als een route niet meer kruist dat hij dan altijd korter is. Als dit zo is, leg dan ook uit hoe dit kan!
 d)
 e)
+
+Opgave 2
+a)
+b)
+c) Er zal ook gekeken moeten worden naar wat goeie en slechte posities zijn om te staan, zo zijn de plekken 1 plek voor de rand slecht, aangezien de andere speler de rand positie dan kan pakken. Een randpositie is uitsteken om te hebben aangezien je dan mogelijk een hele rij over kan nemen. Een hoek positie is nog beter als een randpositie. Hier kan je dan een hele diagonale lijn overnemen. Dit zijn meer steentjes als een verticale of horizontale lijn.

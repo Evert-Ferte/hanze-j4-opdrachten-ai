@@ -48,19 +48,20 @@ def nearest_neighbour_2opt(cities):
     improved = True
     while improved:
         bestPathLength = tour_length(route)
+        improved = False
         for i in range(len(route) - 1):
             for k in range(i+1, len(route)):
                 newRoute = two_opt_swap(route, i, k)
                 newPathLength = tour_length(newRoute)
 
                 if newPathLength < bestPathLength:
-                    print('new shorter path found, changed from length {} to {}'.format(bestPathLength, newPathLength))
                     bestPathLength = newPathLength
-                    route = newRoute  # continue
-                else:
-                    improved = False  # stop, no improved found
+                    route = newRoute
 
-    print(tour_length(route))
+                    improved = True
+                    break
+            if improved:
+                break
     return route
 
 def get_closest_neighbouring_city(city, cities):
@@ -97,15 +98,27 @@ def plot_tsp(algorithm, cities):
 
 # give a demo with 10 cities using brute force
 # plot_tsp(try_all_tours, make_cities(10))
-# plot_tsp(nearest_neighbour, make_cities(100, seed=22))
-# plot_tsp(nearest_neighbour_2opt, make_cities(100, seed=22))
+plot_tsp(nearest_neighbour, make_cities(100, seed=22))
+plot_tsp(nearest_neighbour_2opt, make_cities(100, seed=22))
 
 
-tour = ['A', 'B', 'C', 'D']
-n = len(tour)
-for i in range(n - 1):
-    for k in range(i + 1, n):
-        print(tour[:i] + list(reversed(tour[i:k])) + tour[k:])
+
+# improved = True
+# while improved:
+#     improved = False
+#
+#     for i in range(5):
+#         for j in range(5):
+#             if (i, j) == (random.randrange(0, 10), 3):
+#                 print('improved!')
+#                 improved = True
+#             print(i, j)
+
+# tour = ['A', 'B', 'C', 'D']
+# n = len(tour)
+# for i in range(n - 1):
+#     for k in range(i + 1, n):
+#         print(tour[:i] + list(reversed(tour[i:k])) + tour[k:])
 
 # wat hier staat is 1/2 n^2
 # n = 4
