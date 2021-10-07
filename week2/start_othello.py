@@ -172,7 +172,7 @@ def any_legal_move(player, board):
 def play(black_strat, white_strat):
     # play a game of Othello and return the final board and score
     board = initial_board()
-    curPlayer = BLACK if random.randint(0, 1) is 0 else WHITE
+    curPlayer = BLACK if random.randint(0, 1) == 0 else WHITE
     curPlayer = WHITE  # TODO TEMP
 
     while curPlayer is not None:
@@ -262,9 +262,9 @@ def minimax_strategy(player, board):
     # board  = huidige bord, zonder aanpassingen van square
     def minimax_pseudo(square, depth, minmax, player, board):
         if depth == 0 or not any_legal_move(player, board):  # or not any_legal_move():
-            return get_flip_count(square, player, board), square
+            return get_flip_count(square, player, board) #, square
         if minmax == MAX:
-            value = 0
+            value = 0 # (0, 0)
             # do move
             updated_board = make_move(square, player, board.copy())
             # check legal moves, after the move above
@@ -272,7 +272,7 @@ def minimax_strategy(player, board):
                 value = max(value, minimax_pseudo(child, depth-1, MIN, opponent(player), updated_board))
             return value
         else:  # player == MIN
-            value = 0
+            value = 9999999 # (0, 0)
             # do move
             updated_board = make_move(square, player, board.copy())
             # check legal moves, after the move above
@@ -280,17 +280,23 @@ def minimax_strategy(player, board):
                 value = min(value, minimax_pseudo(child, depth-2, MAX, opponent(player), updated_board))
             return value
 
-
-    bestMove = (0, 0)  # (# of squares flipped by move, move)
-    minmaxDepth = 1
+    bestMove = 0
+    bestValue = 0
+    minmaxDepth = 2
     # This for loop is MAX-ing
     for mov in legal_moves(player, board):
-        # updated_board = make_move(mov, player, board.copy())
         mm = minimax_pseudo(mov, minmaxDepth - 1, MAX, player, board.copy())
-        # print('get max value from {}[0] and {}[0]'.format(bestMove, mm))
-        bestMove = max(bestMove, mm)
+
+        print('{} < {}'.format(bestValue, mm))
+        if bestValue < mm:
+            bestValue = mm
+            bestMove = mov
+
     print('best move for {} is {}'.format(PLAYERS[player], '{}[1]'.format(bestMove)))
-    return bestMove[1]
+    # return bestMove[1]
+    if bestMove == 0:
+        raise IllegalMoveError(player, bestMove, board)
+    return bestMove
 
     # return minimax(origin, 5, MAX)  # TODO return proper bestMove
 

@@ -7,7 +7,7 @@ MAX_DEPTH = 3
 def merge_left(b):
     # merge the board left
     # this function is reused in the other merges
-    # b = [[0, 2, 4, 4], [0, 2, 4, 8], [0, 0, 0, 4], [2, 2, 2, 2]]    
+    # b = [[0, 2, 4, 4], [0, 2, 4, 8], [0, 0, 0, 4], [2, 2, 2, 2]]
     def merge(row, acc):
         # recursive helper for merge_left
         # if len row == 0, return accumulator
@@ -118,7 +118,7 @@ def add_two_four(b):
             return (b)
         else:
             continue
-            
+
 def game_state(b):
     for i in range(4):
         for j in range(4):
@@ -150,4 +150,77 @@ def get_random_move():
     return random.choice(list(MERGE_FUNCTIONS.keys()))
 
 def get_expectimax_move(b):
-    pass
+    h, dir = expectimax(b, MAX_DEPTH, True)
+    return dir
+
+def expectimax(board, depth, is_player_turn=True, dir=None):
+    if depth <= 0 or is_termal_node(board):
+        return get_heuristic(board), dir
+    if is_player_turn:
+        value = (0, '')
+        subStates, dirs = get_sub_states(board)
+        for i in range(len(subStates)):
+            value = max(value, expectimax(subStates[i], depth-1, not is_player_turn, dirs[i]))
+        return value
+    else:
+        value = 0
+        subStates, dirs = get_sub_states(board)
+        for i in range(len(subStates)):
+            value += expectimax(subStates[i], depth-1, not is_player_turn, dirs[i])[0]
+        return value / len(subStates), dir
+
+def is_termal_node(board):
+    return not move_exists(board)
+
+def get_heuristic(board):
+    CORNER, EDGE, MIDDLE = 32, 8, 1
+
+    def heuristic_top_left_corner(x, y):
+        h = 0
+        # check if a tile is in the corner (best), edge (good), middle (bad)
+        if (x, y) == (0, 0):
+            h += CORNER
+        elif x == 0 or y == 0:
+            h += EDGE
+        else:
+            h += MIDDLE
+        return h
+
+    def heuristic_neighbours(b, x, y):
+        h = 0
+        if y+1 < len(b):
+            h += 99 if board[y+1][x] == board[y][x] else 0
+        if y-1 >= 0:
+            h += 99 if board[y-1][x] == board[y][x] else 0
+        if x + 1 < len(b):
+            h += 99 if board[y][x+1] == board[y][x] else 0
+        if x - 1 >= 0:
+            h += 99 if board[y][x-1] == board[y][x] else 0
+        return h
+
+    heuristic = 0
+    for y in range(len(board)):
+        for x in range(len(board)):
+            heuristic += heuristic_top_left_corner(x, y)
+            heuristic += heuristic_neighbours(board, x, y)
+    return heuristic
+
+def get_sub_states(board):
+    subStates = []
+    dirs = []
+    for dir in MERGE_FUNCTIONS:
+        newStateBoard = MERGE_FUNCTIONS[dir](board)
+
+        rows, cols = list(range(4)), list(range(4))
+        random.shuffle(rows)
+        random.shuffle(cols)
+        distribution = [2] * 9 + [4]
+        for i, j in itertools.product(rows, cols):
+            if newStateBoard[i][j] == 0:
+                newStateBoard[i][j] = random.sample(distribution, 1)[0]
+                break
+            else:
+                continue
+        subStates.append(newStateBoard)
+        dirs.append(dir)
+    return subStates, dirs
